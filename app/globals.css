@@ -1,0 +1,184 @@
+:root {
+  --ink: #0f172a;
+  --muted: #475569;
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --line: #dbe2ec;
+  --brand: #0f766e;
+  --warn: #9a3412;
+  --danger: #991b1b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 15% 20%, #ccfbf1 0%, transparent 35%),
+    radial-gradient(circle at 85% 10%, #fde68a 0%, transparent 30%),
+    linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
+  font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+main.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid.cols-3 {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.grid.cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.stats-number {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.stats-label {
+  color: var(--muted);
+  margin: 0.25rem 0 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+nav.menu {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+nav.menu a {
+  border: 1px solid var(--line);
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: #fff;
+}
+
+nav.menu a.active {
+  border-color: var(--brand);
+  color: #fff;
+  background: var(--brand);
+}
+
+.table-wrap {
+  overflow: auto;
+  max-height: 65vh;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92rem;
+}
+
+th,
+td {
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem;
+  vertical-align: top;
+}
+
+th {
+  white-space: nowrap;
+  background: #f8fafc;
+  position: sticky;
+  top: 0;
+}
+
+code {
+  white-space: pre-wrap;
+  font-size: 0.82rem;
+}
+
+form.inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+input,
+textarea,
+button,
+select {
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+textarea {
+  min-height: 120px;
+}
+
+button {
+  cursor: pointer;
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+button.warn {
+  background: var(--warn);
+  border-color: var(--warn);
+}
+
+button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.kicker {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 700px) {
+  main.shell {
+    padding: 0.75rem;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
