@@ -50,9 +50,21 @@ export default async function AdminDashboardPage() {
   ];
 
   const pulses = [
-    { label: "Caption coverage", value: formatPct(captionCoverage) },
-    { label: "Creator density", value: formatPct(creatorDensity) },
-    { label: "Freshness signal", value: formatPct(freshnessSignal) }
+    {
+      label: "Caption coverage",
+      value: formatPct(captionCoverage),
+      explanation: "Share of image rows that have matching caption volume (captions ÷ images)."
+    },
+    {
+      label: "Creator density",
+      value: formatPct(creatorDensity),
+      explanation: "How concentrated creation is across users (images ÷ profiles)."
+    },
+    {
+      label: "Freshness signal",
+      value: formatPct(freshnessSignal),
+      explanation: "Recency score based on latest image/caption activity timestamp."
+    }
   ];
 
   return (
@@ -72,6 +84,7 @@ export default async function AdminDashboardPage() {
             <p className="kicker">Signal</p>
             <p className="stats-number">{pulse.value}</p>
             <p className="stats-label">{pulse.label}</p>
+            <p className="stats-label">{pulse.explanation}</p>
           </article>
         ))}
       </div>
