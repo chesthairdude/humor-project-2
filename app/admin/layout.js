@@ -13,8 +13,8 @@ export default async function AdminLayout({ children }) {
   });
 
   if (!auth.user) {
-    console.log("[AUTH] About to redirect to:", "/login?next=/admin");
-    redirect("/login?next=/admin");
+    console.log("[AUTH] About to redirect to:", "/login");
+    redirect("/login");
   }
 
   if (!auth.isSuperadmin) {

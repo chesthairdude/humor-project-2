@@ -5,7 +5,6 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({ searchParams }) {
   const params = await searchParams;
   const error = params?.error;
-  const next = params?.next ?? "/admin";
 
   return (
     <main className="shell">
@@ -16,7 +15,7 @@ export default async function LoginPage({ searchParams }) {
         {error === "superadmin_required" ? (
           <p className="error">Your account is authenticated but is not marked as superadmin.</p>
         ) : null}
-        <LoginForm next={next} />
+        <LoginForm />
       </section>
     </main>
   );
