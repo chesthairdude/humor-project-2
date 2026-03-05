@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage({ searchParams }) {
   const params = await searchParams;
   const code = params?.code;
+  const nextParam = params?.next;
+  const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "/admin";
 
   if (code) {
-    const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const callbackPath = `/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(safeNext)}`;
+    redirect(callbackPath);
   }
 
   redirect("/admin");

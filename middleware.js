@@ -36,11 +36,19 @@ export async function middleware(request) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("is_superadmin")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (profileError) {
+    console.error("Middleware profile fetch error:", profileError.message, { userId: user.id });
+  }
+
+  if (!profile) {
+    console.error("Middleware profile missing for user:", user.id);
+  }
 
   if (!profile?.is_superadmin) {
     const deniedUrl = new URL("/login", request.url);
