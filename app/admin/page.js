@@ -6,6 +6,36 @@ function formatPct(value) {
   return `${Math.round(value * 100)}%`;
 }
 
+function pickImageUrl(row) {
+  const preferred = ["image_url", "url", "src", "image", "image_src"];
+  for (const key of preferred) {
+    const value = row?.[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+
+  for (const value of Object.values(row ?? {})) {
+    if (typeof value !== "string") continue;
+    const v = value.trim();
+    if (!v) continue;
+    if (v.startsWith("http://") || v.startsWith("https://") || v.startsWith("data:image/")) {
+      return v;
+    }
+  }
+
+  return null;
+}
+
+function pickCaptionText(row) {
+  const preferred = ["caption", "text", "content", "body", "title"];
+  for (const key of preferred) {
+    const value = row?.[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+
+  const fallback = Object.values(row ?? {}).find((value) => typeof value === "string" && value.trim().length > 8);
+  return typeof fallback === "string" ? fallback : null;
+}
+
 export default async function AdminDashboardPage() {
   const [profilesCount, imagesCount, captionsCount, recentImages, recentCaptions] = await Promise.all([
     countRows("profiles"),
@@ -95,7 +125,17 @@ export default async function AdminDashboardPage() {
           <ul>
             {recentImageRows.slice(0, 8).map((row, idx) => (
               <li key={row.id ?? idx}>
-                <code>{String(row.id ?? "(no id)")}</code>
+                {pickImageUrl(row) ? (
+                  <div style={{ width: 220, height: 140, marginBottom: 6, background: "#f8fafc", borderRadius: 8 }}>
+                    <img
+                      src={pickImageUrl(row)}
+                      alt="Recent upload"
+                      style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: 8 }}
+                    />
+                  </div>
+                ) : (
+                  <code>(no image url found)</code>
+                )}
                 {row.created_at ? ` • ${new Date(row.created_at).toLocaleString()}` : ""}
               </li>
             ))}
@@ -108,7 +148,7 @@ export default async function AdminDashboardPage() {
           <ul>
             {recentCaptionRows.slice(0, 8).map((row, idx) => (
               <li key={row.id ?? idx}>
-                <code>{String(row.id ?? "(no id)")}</code>
+                <p style={{ margin: 0 }}>{pickCaptionText(row) ?? "(no caption text found)"}</p>
                 {row.created_at ? ` • ${new Date(row.created_at).toLocaleString()}` : ""}
               </li>
             ))}
