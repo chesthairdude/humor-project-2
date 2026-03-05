@@ -13,11 +13,12 @@ export default function LoginForm({ next = "/admin" }) {
 
     const supabase = createClient();
     const safeNext = next.startsWith("/") ? next : "/admin";
-    const redirectTo = `${window.location.origin}${safeNext}`;
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    callbackUrl.searchParams.set("next", safeNext);
 
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo }
+      options: { redirectTo: callbackUrl.toString() }
     });
 
     if (signInError) {
