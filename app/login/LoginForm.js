@@ -10,6 +10,7 @@ export default function LoginForm({ next = "/admin" }) {
   async function onGoogleSignIn() {
     setError("");
     setLoading(true);
+    console.log("[AUTH] Login attempt started", { provider: "google" });
 
     const supabase = createClient();
     const safeNext = next.startsWith("/") ? next : "/admin";
@@ -20,8 +21,14 @@ export default function LoginForm({ next = "/admin" }) {
       provider: "google",
       options: { redirectTo: callbackUrl.toString() }
     });
+    console.log("[AUTH] signInWithOAuth result", {
+      provider: "google",
+      redirectTo: callbackUrl.toString(),
+      error: signInError?.message
+    });
 
     if (signInError) {
+      console.log("[AUTH] About to stay on login due to OAuth error");
       setLoading(false);
       setError(signInError.message);
     }

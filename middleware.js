@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
 export async function middleware(request) {
+  console.log("[MIDDLEWARE] Request path:", request.nextUrl.pathname);
   const response = NextResponse.next({
     request: {
       headers: request.headers
@@ -29,10 +30,12 @@ export async function middleware(request) {
   const {
     data: { user }
   } = await supabase.auth.getUser();
+  console.log("[MIDDLEWARE] Has session:", Boolean(user));
 
   if (!user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", request.nextUrl.pathname);
+    console.log("[MIDDLEWARE] Redirecting to:", loginUrl.toString());
     return NextResponse.redirect(loginUrl);
   }
 
@@ -49,13 +52,20 @@ export async function middleware(request) {
   if (!profile) {
     console.error("Middleware profile missing for user:", user.id);
   }
+  console.log("[MIDDLEWARE] Profile fetch result", {
+    userId: user.id,
+    isSuperadmin: Boolean(profile?.is_superadmin),
+    error: profileError?.message
+  });
 
   if (!profile?.is_superadmin) {
     const deniedUrl = new URL("/login", request.url);
     deniedUrl.searchParams.set("error", "superadmin_required");
+    console.log("[MIDDLEWARE] Redirecting to:", deniedUrl.toString());
     return NextResponse.redirect(deniedUrl);
   }
 
+  console.log("[MIDDLEWARE] Redirecting to: none (allow request)");
   return response;
 }
 

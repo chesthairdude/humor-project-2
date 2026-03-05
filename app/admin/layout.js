@@ -7,12 +7,18 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }) {
   const auth = await requireSuperadmin();
+  console.log("[AUTH] AdminLayout auth result", {
+    userId: auth.user?.id ?? null,
+    isSuperadmin: Boolean(auth.isSuperadmin)
+  });
 
   if (!auth.user) {
+    console.log("[AUTH] About to redirect to:", "/login?next=/admin");
     redirect("/login?next=/admin");
   }
 
   if (!auth.isSuperadmin) {
+    console.log("[AUTH] About to redirect to:", "/login?error=superadmin_required");
     redirect("/login?error=superadmin_required");
   }
 
