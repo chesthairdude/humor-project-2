@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import AdminNav from "@/components/AdminNav";
 import SignOutButton from "@/components/SignOutButton";
+import Sidebar from "@/components/admin/Sidebar";
 import { requireSuperadmin } from "@/lib/adminData";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }) {
   }
 
   return (
-    <main className="shell">
+    <main className="shell admin-shell">
       <div className="topbar">
         <div>
           <p className="kicker">Humor Project</p>
@@ -31,10 +31,10 @@ export default async function AdminLayout({ children }) {
         </div>
         <SignOutButton />
       </div>
-      <div className="panel" style={{ marginBottom: "1rem" }}>
-        <AdminNav />
+      <div className="admin-layout">
+        <Sidebar />
+        <section className="admin-main">{children}</section>
       </div>
-      {children}
     </main>
   );
 }
