@@ -176,6 +176,7 @@ export default function ResourcePage({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [saveProgress, setSaveProgress] = useState(null);
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -276,6 +277,7 @@ export default function ResourcePage({
   async function handleSave() {
     setSaving(true);
     setError("");
+    setSaveProgress(null);
 
     const payload = formFields.reduce((accumulator, field) => {
       accumulator[field.key] = normalizeValue(field, form[field.key]);
@@ -283,7 +285,14 @@ export default function ResourcePage({
     }, {});
 
     const result = onSave
-      ? await onSave({ supabase, form, payload, editing, extraData })
+      ? await onSave({
+          supabase,
+          form,
+          payload,
+          editing,
+          extraData,
+          setProgress: (progress) => setSaveProgress(progress)
+        })
       : editing
         ? await supabase.from(table).update(payload).eq("id", editing.id)
         : await supabase.from(table).insert(payload);
@@ -291,10 +300,12 @@ export default function ResourcePage({
     if (result?.error) {
       setError(result.error.message);
       setSaving(false);
+      setSaveProgress(null);
       return;
     }
 
     setSaving(false);
+    setSaveProgress(null);
     setModalOpen(false);
     await load();
   }
@@ -404,6 +415,20 @@ export default function ResourcePage({
           ) : (
             <DefaultForm fields={formFields} form={form} setForm={setForm} extraData={extraData} />
           )}
+          {saving && saveProgress ? (
+            <div className="admin-save-progress">
+              <div className="admin-save-progress-copy">
+                <span>{saveProgress.label ?? "Processing..."}</span>
+                <span>{`${Math.max(0, Math.min(100, Math.round(saveProgress.value ?? 0)))}%`}</span>
+              </div>
+              <div className="admin-save-progress-track">
+                <div
+                  className="admin-save-progress-bar"
+                  style={{ width: `${Math.max(0, Math.min(100, saveProgress.value ?? 0))}%` }}
+                />
+              </div>
+            </div>
+          ) : null}
           <div className="admin-modal-actions">
             <button type="button" className="admin-button ghost" onClick={() => setModalOpen(false)} disabled={saving}>
               Cancel
