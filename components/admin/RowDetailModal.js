@@ -16,7 +16,7 @@ function formatValue(value) {
   return String(value);
 }
 
-export default function RowDetailModal({ row, onClose, extraContent = null }) {
+export default function RowDetailModal({ row, onClose, extraContent = null, topContent = null }) {
   if (!row) return null;
 
   return (
@@ -36,6 +36,8 @@ export default function RowDetailModal({ row, onClose, extraContent = null }) {
         </div>
 
         <div className="admin-row-detail-body">
+          {topContent}
+
           {Object.entries(row).map(([key, value]) => (
             <div key={key} className="admin-row-detail-item">
               <p className="admin-row-detail-key">{key}</p>

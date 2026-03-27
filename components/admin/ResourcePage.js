@@ -165,6 +165,7 @@ export default function ResourcePage({
   getDeleteLabel,
   tableOptions,
   onRowSelect,
+  renderRowDetailTop,
   renderRowDetailExtra,
   pageSize = DEFAULT_PAGE_SIZE
 }) {
@@ -453,6 +454,16 @@ export default function ResourcePage({
       <RowDetailModal
         row={selectedRow}
         onClose={handleRowDetailClose}
+        topContent={
+          selectedRow && typeof renderRowDetailTop === "function"
+            ? renderRowDetailTop({
+                row: selectedRow,
+                detailData: rowDetailData,
+                detailLoading: rowDetailLoading,
+                detailError: rowDetailError
+              })
+            : null
+        }
         extraContent={
           selectedRow && typeof renderRowDetailExtra === "function"
             ? renderRowDetailExtra({
