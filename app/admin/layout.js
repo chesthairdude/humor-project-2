@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import SignOutButton from "@/components/SignOutButton";
 import Sidebar from "@/components/admin/Sidebar";
+import ThemeToggle from "@/components/admin/ThemeToggle";
 import { requireSuperadmin } from "@/lib/adminData";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,10 @@ export default async function AdminLayout({ children }) {
           <p className="kicker">Humor Project</p>
           <h1>Superadmin Console</h1>
         </div>
-        <SignOutButton className="admin-button ghost admin-signout-button" />
+        <div className="admin-topbar-actions">
+          <ThemeToggle />
+          <SignOutButton className="admin-button ghost admin-signout-button" />
+        </div>
       </header>
       <div className="admin-layout">
         <Sidebar />

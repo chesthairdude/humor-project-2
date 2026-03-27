@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" style={{ height: "100%" }}>
+    <html lang="en" style={{ height: "100%" }} suppressHydrationWarning>
       <body style={{ height: "100%", margin: 0 }}>{children}</body>
     </html>
   );

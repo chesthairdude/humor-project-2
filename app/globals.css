@@ -1,7 +1,7 @@
 :root {
   --ink: #0f172a;
   --muted: #475569;
-  --bg: #f8fafc;
+  --bg: #ffffff;
   --panel: #ffffff;
   --line: #dbe2ec;
   --brand: #0f766e;
@@ -18,6 +18,28 @@
   --nav-item-bg: rgba(241, 245, 249, 0.9);
   --input-bg: rgba(255, 255, 255, 0.92);
   --input-border: rgba(148, 163, 184, 0.3);
+}
+
+:root[data-theme="dark"] {
+  --ink: #e5eef9;
+  --muted: #9caec2;
+  --bg: #0f172a;
+  --panel: #111827;
+  --line: #243244;
+  --brand: #2dd4bf;
+  --brand-strong: #14b8a6;
+  --brand-soft: rgba(45, 212, 191, 0.14);
+  --warn: #fb923c;
+  --danger: #fb7185;
+  --glass-bg: rgba(15, 23, 42, 0.84);
+  --glass-border: rgba(148, 163, 184, 0.18);
+  --glass-shadow: 0 18px 60px rgba(2, 6, 23, 0.45);
+  --text-primary: var(--ink);
+  --text-secondary: var(--muted);
+  --text-tertiary: #7f93aa;
+  --nav-item-bg: rgba(30, 41, 59, 0.88);
+  --input-bg: rgba(15, 23, 42, 0.9);
+  --input-border: rgba(148, 163, 184, 0.22);
 }
 
 html,
@@ -37,11 +59,9 @@ body:has(.admin-viewport) {
 body {
   margin: 0;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 15% 20%, #ccfbf1 0%, transparent 35%),
-    radial-gradient(circle at 85% 10%, #fde68a 0%, transparent 30%),
-    linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
+  background: var(--bg);
   font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 a {
@@ -159,7 +179,8 @@ select {
   padding: 0.55rem 0.7rem;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 textarea {
@@ -658,6 +679,12 @@ button {
   backdrop-filter: blur(24px);
 }
 
+.admin-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .admin-topbar .kicker {
   margin: 0;
   color: var(--text-tertiary);
@@ -676,6 +703,19 @@ button {
 
 .admin-signout-button {
   flex-shrink: 0;
+}
+
+.admin-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--nav-item-bg);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .admin-page-error {
