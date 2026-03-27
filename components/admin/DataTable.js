@@ -32,6 +32,7 @@ export default function DataTable({
   onEdit,
   onDelete,
   loading,
+  onRowClick,
   actionLayout = "row",
   actionWidth = "100px",
   overflowX = "auto"
@@ -65,7 +66,11 @@ export default function DataTable({
         </thead>
         <tbody>
           {data.map((row, index) => (
-            <tr key={row.id ?? index}>
+            <tr
+              key={row.id ?? index}
+              className={onRowClick ? "admin-table-row admin-table-row-clickable" : "admin-table-row"}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+            >
               {columns.map((column) => (
                 <td key={column.key} className="admin-table-cell">
                   {column.render ? column.render(row[column.key], row) : String(row[column.key] ?? "—")}
@@ -78,7 +83,10 @@ export default function DataTable({
                       <button
                         type="button"
                         className={actionLayout === "column" ? "admin-table-action-button admin-table-action-button-edit" : "admin-button ghost"}
-                        onClick={() => onEdit(row)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onEdit(row);
+                        }}
                       >
                         Edit
                       </button>
@@ -87,7 +95,10 @@ export default function DataTable({
                       <button
                         type="button"
                         className={actionLayout === "column" ? "admin-table-action-button admin-table-action-button-delete" : "admin-button danger-ghost"}
-                        onClick={() => onDelete(row)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onDelete(row);
+                        }}
                       >
                         Delete
                       </button>

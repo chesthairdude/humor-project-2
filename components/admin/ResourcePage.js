@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ConfirmDelete from "@/components/admin/ConfirmDelete";
 import DataTable from "@/components/admin/DataTable";
 import Modal from "@/components/admin/Modal";
+import RowDetailModal from "@/components/admin/RowDetailModal";
 import { createClient } from "@/lib/supabase/client";
 
 function normalizeValue(field, value) {
@@ -151,7 +152,9 @@ export default function ResourcePage({
   onSave,
   onDelete,
   getDeleteLabel,
-  tableOptions
+  tableOptions,
+  onRowSelect,
+  renderRowDetailExtra
 }) {
   const [supabase] = useState(() => createClient());
   const [rows, setRows] = useState([]);
@@ -165,6 +168,10 @@ export default function ResourcePage({
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(buildForm(formFields));
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [rowDetailData, setRowDetailData] = useState(null);
+  const [rowDetailLoading, setRowDetailLoading] = useState(false);
+  const [rowDetailError, setRowDetailError] = useState("");
 
   const activeColumns = typeof getColumns === "function" ? getColumns(extraData) : columns;
 
@@ -202,6 +209,32 @@ export default function ResourcePage({
     setEditing(row);
     setForm(buildForm(formFields, row));
     setModalOpen(true);
+  }
+
+  async function handleRowSelect(row) {
+    setSelectedRow(row);
+    setRowDetailData(null);
+    setRowDetailError("");
+
+    if (!onRowSelect) return;
+
+    setRowDetailLoading(true);
+
+    try {
+      const detailData = await onRowSelect({ supabase, row, extraData });
+      setRowDetailData(detailData ?? null);
+    } catch (error) {
+      setRowDetailError(error?.message ?? "Unable to load row detail.");
+    } finally {
+      setRowDetailLoading(false);
+    }
+  }
+
+  function handleRowDetailClose() {
+    setSelectedRow(null);
+    setRowDetailData(null);
+    setRowDetailLoading(false);
+    setRowDetailError("");
   }
 
   async function handleSave() {
@@ -294,6 +327,7 @@ export default function ResourcePage({
           loading={loading}
           onEdit={canEdit ? openEdit : undefined}
           onDelete={canDelete ? setDeleteTarget : undefined}
+          onRowClick={handleRowSelect}
           actionLayout={tableOptions?.actionLayout}
           actionWidth={tableOptions?.actionWidth}
           overflowX={tableOptions?.overflowX}
@@ -327,6 +361,21 @@ export default function ResourcePage({
           onConfirm={handleDeleteConfirm}
         />
       ) : null}
+
+      <RowDetailModal
+        row={selectedRow}
+        onClose={handleRowDetailClose}
+        extraContent={
+          selectedRow && typeof renderRowDetailExtra === "function"
+            ? renderRowDetailExtra({
+                row: selectedRow,
+                detailData: rowDetailData,
+                detailLoading: rowDetailLoading,
+                detailError: rowDetailError
+              })
+            : null
+        }
+      />
     </section>
   );
 }
