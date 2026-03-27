@@ -150,7 +150,8 @@ export default function ResourcePage({
   renderForm,
   onSave,
   onDelete,
-  getDeleteLabel
+  getDeleteLabel,
+  tableOptions
 }) {
   const [supabase] = useState(() => createClient());
   const [rows, setRows] = useState([]);
@@ -293,6 +294,9 @@ export default function ResourcePage({
           loading={loading}
           onEdit={canEdit ? openEdit : undefined}
           onDelete={canDelete ? setDeleteTarget : undefined}
+          actionLayout={tableOptions?.actionLayout}
+          actionWidth={tableOptions?.actionWidth}
+          overflowX={tableOptions?.overflowX}
         />
       </div>
 

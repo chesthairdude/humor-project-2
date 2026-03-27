@@ -362,6 +362,10 @@ button {
   padding-bottom: 24px;
 }
 
+.admin-table-wrap-no-x {
+  overflow-x: hidden;
+}
+
 .admin-table-panel {
   flex: 1;
   min-height: 0;
@@ -415,6 +419,33 @@ button {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.admin-table-actions-column {
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.admin-table-action-button {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.admin-table-action-button-edit {
+  background: var(--nav-item-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+}
+
+.admin-table-action-button-delete {
+  background: rgba(255, 68, 88, 0.08);
+  border: 1px solid rgba(255, 68, 88, 0.25);
+  color: #ff4458;
 }
 
 .admin-button {

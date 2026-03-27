@@ -26,7 +26,16 @@ function inferColumnWidth(column) {
   return "140px";
 }
 
-export default function DataTable({ columns, data, onEdit, onDelete, loading }) {
+export default function DataTable({
+  columns,
+  data,
+  onEdit,
+  onDelete,
+  loading,
+  actionLayout = "row",
+  actionWidth = "100px",
+  overflowX = "auto"
+}) {
   if (loading) {
     return <div className="admin-empty-state">Loading...</div>;
   }
@@ -36,20 +45,22 @@ export default function DataTable({ columns, data, onEdit, onDelete, loading }) 
   }
 
   return (
-    <div className="admin-table-wrap">
+    <div
+      className={overflowX === "hidden" ? "admin-table-wrap admin-table-wrap-no-x" : "admin-table-wrap"}
+    >
       <table className="admin-table">
         <colgroup>
           {columns.map((column) => (
             <col key={column.key} style={{ width: inferColumnWidth(column) }} />
           ))}
-          {(onEdit || onDelete) ? <col style={{ width: "100px" }} /> : null}
+          {(onEdit || onDelete) ? <col style={{ width: actionWidth }} /> : null}
         </colgroup>
         <thead>
           <tr>
             {columns.map((column) => (
               <th key={column.key}>{column.label}</th>
             ))}
-            {(onEdit || onDelete) ? <th style={{ width: "100px" }}>Actions</th> : null}
+            {(onEdit || onDelete) ? <th style={{ width: actionWidth }}>Actions</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -61,15 +72,23 @@ export default function DataTable({ columns, data, onEdit, onDelete, loading }) 
                 </td>
               ))}
               {(onEdit || onDelete) ? (
-                <td className="admin-table-cell">
-                  <div className="admin-table-actions">
+                <td className="admin-table-cell" style={actionLayout === "column" ? { padding: "8px 12px", width: actionWidth } : undefined}>
+                  <div className={actionLayout === "column" ? "admin-table-actions admin-table-actions-column" : "admin-table-actions"}>
                     {onEdit ? (
-                      <button type="button" className="admin-button ghost" onClick={() => onEdit(row)}>
+                      <button
+                        type="button"
+                        className={actionLayout === "column" ? "admin-table-action-button admin-table-action-button-edit" : "admin-button ghost"}
+                        onClick={() => onEdit(row)}
+                      >
                         Edit
                       </button>
                     ) : null}
                     {onDelete ? (
-                      <button type="button" className="admin-button danger-ghost" onClick={() => onDelete(row)}>
+                      <button
+                        type="button"
+                        className={actionLayout === "column" ? "admin-table-action-button admin-table-action-button-delete" : "admin-button danger-ghost"}
+                        onClick={() => onDelete(row)}
+                      >
                         Delete
                       </button>
                     ) : null}
