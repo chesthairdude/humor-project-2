@@ -1,5 +1,31 @@
 "use client";
 
+function inferColumnWidth(column) {
+  if (column.width) return column.width;
+
+  const key = column.key ?? "";
+
+  if (key === "id") return "60px";
+  if (key.includes("created")) return "110px";
+  if (key.includes("priority")) return "80px";
+  if (key.includes("type")) return "100px";
+  if (key.includes("seconds") || key.includes("count") || key.includes("temp")) return "90px";
+  if (key.includes("email")) return "220px";
+  if (key.includes("url") || key.includes("domain")) return "240px";
+  if (key.includes("name") || key.includes("term") || key.includes("slug") || key.includes("provider")) return "150px";
+  if (
+    key.includes("description") ||
+    key.includes("definition") ||
+    key.includes("example") ||
+    key.includes("content") ||
+    key.includes("response")
+  ) {
+    return "25%";
+  }
+
+  return "140px";
+}
+
 export default function DataTable({ columns, data, onEdit, onDelete, loading }) {
   if (loading) {
     return <div className="admin-empty-state">Loading...</div>;
@@ -12,24 +38,30 @@ export default function DataTable({ columns, data, onEdit, onDelete, loading }) 
   return (
     <div className="admin-table-wrap">
       <table className="admin-table">
+        <colgroup>
+          {columns.map((column) => (
+            <col key={column.key} style={{ width: inferColumnWidth(column) }} />
+          ))}
+          {(onEdit || onDelete) ? <col style={{ width: "100px" }} /> : null}
+        </colgroup>
         <thead>
           <tr>
             {columns.map((column) => (
               <th key={column.key}>{column.label}</th>
             ))}
-            {(onEdit || onDelete) ? <th style={{ width: 120 }}>Actions</th> : null}
+            {(onEdit || onDelete) ? <th style={{ width: "100px" }}>Actions</th> : null}
           </tr>
         </thead>
         <tbody>
           {data.map((row, index) => (
             <tr key={row.id ?? index}>
               {columns.map((column) => (
-                <td key={column.key}>
+                <td key={column.key} className="admin-table-cell">
                   {column.render ? column.render(row[column.key], row) : String(row[column.key] ?? "—")}
                 </td>
               ))}
               {(onEdit || onDelete) ? (
-                <td>
+                <td className="admin-table-cell">
                   <div className="admin-table-actions">
                     {onEdit ? (
                       <button type="button" className="admin-button ghost" onClick={() => onEdit(row)}>

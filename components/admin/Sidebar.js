@@ -49,12 +49,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="admin-sidebar panel">
-      <div className="admin-sidebar-header">
-        <p className="kicker">Navigation</p>
-        <h2>Admin Panel</h2>
-      </div>
-
+    <aside className="admin-sidebar">
       <div className="admin-sidebar-groups">
         {NAV_GROUPS.map((group) => (
           <section key={group.label} className="admin-nav-group">

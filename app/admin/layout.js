@@ -23,18 +23,18 @@ export default async function AdminLayout({ children }) {
   }
 
   return (
-    <main className="shell admin-shell">
-      <div className="topbar">
+    <div className="admin-viewport">
+      <header className="admin-topbar">
         <div>
           <p className="kicker">Humor Project</p>
-          <h1 style={{ margin: 0 }}>Superadmin Console</h1>
+          <h1>Superadmin Console</h1>
         </div>
-        <SignOutButton />
-      </div>
+        <SignOutButton className="admin-button ghost admin-signout-button" />
+      </header>
       <div className="admin-layout">
         <Sidebar />
         <section className="admin-main">{children}</section>
       </div>
-    </main>
+    </div>
   );
 }

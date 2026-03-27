@@ -254,12 +254,23 @@ export default function ResourcePage({
 
   return (
     <section className="admin-page">
-      <div className="panel">
-        <div className="admin-page-header">
-          <div>
-            <h1>{title}</h1>
-            <p>{description}</p>
-          </div>
+      <div className="admin-page-header">
+        <div>
+          <h1>{title}</h1>
+          <p>{description}</p>
+        </div>
+      </div>
+
+      <div className="admin-toolbar">
+        <input
+          className="admin-search"
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={`Search ${title.toLowerCase()}...`}
+        />
+        <div className="admin-toolbar-actions">
+          <p className="kicker admin-toolbar-count">{filteredRows.length} shown</p>
           {canCreate ? (
             <button type="button" className="admin-button primary" onClick={openCreate}>
               {createLabel ?? `New ${singular}`}
@@ -268,22 +279,9 @@ export default function ResourcePage({
         </div>
       </div>
 
-      <div className="panel">
-        <div className="admin-toolbar">
-          <input
-            className="admin-search"
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={`Search ${title.toLowerCase()}...`}
-          />
-          <p className="kicker" style={{ margin: 0 }}>
-            {filteredRows.length} shown
-          </p>
-        </div>
+      {error ? <p className="error admin-page-error">{error}</p> : null}
 
-        {error ? <p className="error">{error}</p> : null}
-
+      <div className="admin-table-panel">
         <DataTable
           columns={activeColumns.map((column) => ({
             ...column,
