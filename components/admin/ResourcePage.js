@@ -339,7 +339,7 @@ export default function ResourcePage({
       <div className="admin-page-header">
         <div>
           <h1>{title}</h1>
-          <p>{description}</p>
+          <p>{`${description} Click each row to expand.`}</p>
         </div>
       </div>
 
