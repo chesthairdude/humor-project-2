@@ -7,6 +7,8 @@ import Modal from "@/components/admin/Modal";
 import RowDetailModal from "@/components/admin/RowDetailModal";
 import { createClient } from "@/lib/supabase/client";
 
+const DEFAULT_PAGE_SIZE = 100;
+
 function normalizeValue(field, value) {
   if (field.type === "checkbox") return Boolean(value);
   if (field.type === "number" || field.type === "select-number") {
@@ -42,27 +44,36 @@ function buildForm(fields, row = {}) {
   return next;
 }
 
-async function fetchOrdered(query, orderBy, ascending) {
+function buildSearchFilter(searchKeys, query) {
+  if (!query || !searchKeys.length) return null;
+
+  const escapedQuery = query.replaceAll(",", "\\,");
+  const filterableKeys = searchKeys.filter((key) => {
+    return !(
+      key === "id" ||
+      key.endsWith("_id") ||
+      key.includes("priority") ||
+      key.includes("count") ||
+      key.includes("seconds") ||
+      key.includes("order_by")
+    );
+  });
+
+  if (!filterableKeys.length) return null;
+
+  return filterableKeys.map((key) => `${key}.ilike.%${escapedQuery}%`).join(",");
+}
+
+async function fetchOrdered(query, orderBy, ascending, range) {
   if (orderBy) {
-    const ordered = await query.order(orderBy, { ascending });
+    const ordered = await query.order(orderBy, { ascending }).range(range.from, range.to);
     if (!ordered.error) return ordered;
   }
 
-  const byId = await query.order("id", { ascending });
+  const byId = await query.order("id", { ascending }).range(range.from, range.to);
   if (!byId.error) return byId;
 
-  return await query;
-}
-
-function matchesSearch(row, searchKeys, query) {
-  if (!query) return true;
-  const lowered = query.toLowerCase();
-
-  return searchKeys.some((key) => {
-    const value = row?.[key];
-    if (value === null || typeof value === "undefined") return false;
-    return String(value).toLowerCase().includes(lowered);
-  });
+  return await query.range(range.from, range.to);
 }
 
 function DefaultForm({ fields, form, setForm, extraData }) {
@@ -154,10 +165,12 @@ export default function ResourcePage({
   getDeleteLabel,
   tableOptions,
   onRowSelect,
-  renderRowDetailExtra
+  renderRowDetailExtra,
+  pageSize = DEFAULT_PAGE_SIZE
 }) {
   const [supabase] = useState(() => createClient());
   const [rows, setRows] = useState([]);
+  const [totalRows, setTotalRows] = useState(0);
   const [extraData, setExtraData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -172,23 +185,36 @@ export default function ResourcePage({
   const [rowDetailData, setRowDetailData] = useState(null);
   const [rowDetailLoading, setRowDetailLoading] = useState(false);
   const [rowDetailError, setRowDetailError] = useState("");
+  const [page, setPage] = useState(1);
 
   const activeColumns = typeof getColumns === "function" ? getColumns(extraData) : columns;
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
 
   async function load() {
     setLoading(true);
     setError("");
 
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const searchFilter = buildSearchFilter(searchKeys, query.trim());
+    let rowsQuery = supabase.from(table).select("*", { count: "exact" });
+
+    if (searchFilter) {
+      rowsQuery = rowsQuery.or(searchFilter);
+    }
+
     const [rowsResult, extraResult] = await Promise.all([
-      fetchOrdered(supabase.from(table).select("*"), orderBy, orderAscending),
+      fetchOrdered(rowsQuery, orderBy, orderAscending, { from, to }),
       loadExtraData ? loadExtraData(supabase) : Promise.resolve({})
     ]);
 
     if (rowsResult.error) {
       setRows([]);
+      setTotalRows(0);
       setError(rowsResult.error.message);
     } else {
       setRows(rowsResult.data ?? []);
+      setTotalRows(rowsResult.count ?? 0);
     }
 
     setExtraData(extraResult ?? {});
@@ -197,7 +223,17 @@ export default function ResourcePage({
 
   useEffect(() => {
     load();
-  }, []);
+  }, [page, query]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   function openCreate() {
     setEditing(null);
@@ -284,7 +320,8 @@ export default function ResourcePage({
     await load();
   }
 
-  const filteredRows = rows.filter((row) => matchesSearch(row, searchKeys, query));
+  const pageStart = totalRows === 0 ? 0 : (page - 1) * pageSize + 1;
+  const pageEnd = totalRows === 0 ? 0 : pageStart + rows.length - 1;
 
   return (
     <section className="admin-page">
@@ -304,7 +341,9 @@ export default function ResourcePage({
           placeholder={`Search ${title.toLowerCase()}...`}
         />
         <div className="admin-toolbar-actions">
-          <p className="kicker admin-toolbar-count">{filteredRows.length} shown</p>
+          <p className="kicker admin-toolbar-count">
+            {totalRows === 0 ? "0 shown" : `${pageStart}-${pageEnd} of ${totalRows}`}
+          </p>
           {canCreate ? (
             <button type="button" className="admin-button primary" onClick={openCreate}>
               {createLabel ?? `New ${singular}`}
@@ -323,7 +362,7 @@ export default function ResourcePage({
               ? (value, row) => column.render(value, row, { extraData })
               : undefined
           }))}
-          data={filteredRows}
+          data={rows}
           loading={loading}
           onEdit={canEdit ? openEdit : undefined}
           onDelete={canDelete ? setDeleteTarget : undefined}
@@ -332,6 +371,30 @@ export default function ResourcePage({
           actionWidth={tableOptions?.actionWidth}
           overflowX={tableOptions?.overflowX}
         />
+      </div>
+
+      <div className="admin-pagination">
+        <p className="admin-pagination-copy">
+          {totalRows === 0 ? "No records" : `Page ${page} of ${totalPages}`}
+        </p>
+        <div className="admin-pagination-actions">
+          <button
+            type="button"
+            className="admin-button ghost"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={loading || page <= 1}
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            className="admin-button ghost"
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={loading || page >= totalPages}
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {modalOpen ? (
