@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+const PAGE_SIZE = 1000;
+
 const containerStyle = {
   display: "flex",
   flexDirection: "column",
@@ -20,6 +22,32 @@ const panelStyle = {
   border: "1px solid var(--glass-border)",
   boxShadow: "var(--glass-shadow)"
 };
+
+async function fetchAllRows(supabase, table, columns) {
+  const rows = [];
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(columns)
+      .order("id", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error) {
+      return { data: [], error };
+    }
+
+    const batch = data ?? [];
+    rows.push(...batch);
+
+    if (batch.length < PAGE_SIZE) {
+      return { data: rows, error: null };
+    }
+
+    offset += PAGE_SIZE;
+  }
+}
 
 function isoDayKey(value) {
   const date = new Date(value);
@@ -317,9 +345,21 @@ export default function StatisticsPage() {
 
     async function load() {
       const [votesResult, captionsResult, usersResult] = await Promise.all([
-        supabase.from("caption_votes").select("*"),
-        supabase.from("captions").select("id, content, image_id, created_datetime_utc, humor_flavor_id"),
-        supabase.from("profiles").select("id, email, created_datetime_utc")
+        fetchAllRows(
+          supabase,
+          "caption_votes",
+          "id, caption_id, vote_value, created_at, created_datetime_utc, user_id"
+        ),
+        fetchAllRows(
+          supabase,
+          "captions",
+          "id, content, caption_content, image_id, created_at, created_datetime_utc, humor_flavor_id"
+        ),
+        fetchAllRows(
+          supabase,
+          "profiles",
+          "id, email, created_at, created_datetime_utc"
+        )
       ]);
 
       if (!active) return;
