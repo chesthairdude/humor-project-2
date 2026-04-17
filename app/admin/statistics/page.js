@@ -104,7 +104,7 @@ function normalizeVote(row) {
     captionId: row?.caption_id,
     voteValue: Number(row?.vote_value ?? 0),
     createdAt: row?.created_at ?? row?.created_datetime_utc ?? null,
-    userId: row?.user_id ?? null
+    userId: row?.profile_id ?? row?.user_id ?? null
   };
 }
 
@@ -348,12 +348,12 @@ export default function StatisticsPage() {
         fetchAllRows(
           supabase,
           "caption_votes",
-          "id, caption_id, vote_value, created_datetime_utc, user_id"
+          "id, caption_id, vote_value, created_datetime_utc, profile_id"
         ),
         fetchAllRows(
           supabase,
           "captions",
-          "id, content, caption_content, image_id, created_datetime_utc, humor_flavor_id"
+          "id, content, image_id, created_datetime_utc, humor_flavor_id"
         ),
         fetchAllRows(
           supabase,
