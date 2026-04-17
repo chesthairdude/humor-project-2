@@ -1,9 +1,7 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 
 const PAGE_SIZE = 1000;
+export const dynamic = "force-dynamic";
 
 const containerStyle = {
   display: "flex",
@@ -206,6 +204,21 @@ function buildStatistics(voteRows, captionRows, userRows) {
   };
 }
 
+function getTopVoterIds(voteRows, limit = 5) {
+  const votes = (voteRows ?? []).map(normalizeVote).filter((row) => row.userId);
+  const votesByUser = {};
+
+  votes.forEach((vote) => {
+    const userId = String(vote.userId);
+    votesByUser[userId] = (votesByUser[userId] ?? 0) + 1;
+  });
+
+  return Object.entries(votesByUser)
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, limit)
+    .map(([userId]) => userId);
+}
+
 function StatCard({ label, value, icon, color, sub }) {
   return (
     <div
@@ -316,7 +329,7 @@ function RankTable({ title, icon, rows, valueKey, valueSuffix = "", valueColor }
   );
 }
 
-function LoadingState({ message }) {
+function StatusState({ message }) {
   return (
     <div style={containerStyle}>
       <div style={{ flexShrink: 0, marginBottom: "20px" }}>
@@ -330,64 +343,40 @@ function LoadingState({ message }) {
   );
 }
 
-export default function StatisticsPage() {
-  const [state, setState] = useState({
-    loading: true,
-    error: "",
-    votes: [],
-    captions: [],
-    users: []
-  });
+export default async function StatisticsPage() {
+  const supabase = await createClient();
+  const [votesResult, captionsResult] = await Promise.all([
+    fetchAllRows(
+      supabase,
+      "caption_votes",
+      "id, caption_id, vote_value, created_datetime_utc, profile_id"
+    ),
+    fetchAllRows(
+      supabase,
+      "captions",
+      "id, content, image_id, created_datetime_utc, humor_flavor_id"
+    )
+  ]);
 
-  useEffect(() => {
-    let active = true;
-    const supabase = createClient();
-
-    async function load() {
-      const [votesResult, captionsResult, usersResult] = await Promise.all([
-        fetchAllRows(
-          supabase,
-          "caption_votes",
-          "id, caption_id, vote_value, created_datetime_utc, profile_id"
-        ),
-        fetchAllRows(
-          supabase,
-          "captions",
-          "id, content, image_id, created_datetime_utc, humor_flavor_id"
-        ),
-        fetchAllRows(
-          supabase,
-          "profiles",
-          "id, email, created_datetime_utc"
-        )
-      ]);
-
-      if (!active) return;
-
-      const errorMessage = votesResult.error?.message || captionsResult.error?.message || usersResult.error?.message || "";
-
-      setState({
-        loading: false,
-        error: errorMessage,
-        votes: votesResult.data ?? [],
-        captions: captionsResult.data ?? [],
-        users: usersResult.data ?? []
-      });
-    }
-
-    load();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  if (state.loading) {
-    return <LoadingState message="Loading caption vote analytics..." />;
+  const baseError = votesResult.error?.message || captionsResult.error?.message || "";
+  if (baseError) {
+    return <StatusState message={baseError} />;
   }
 
-  if (state.error) {
-    return <LoadingState message={state.error} />;
+  const topVoterIds = getTopVoterIds(votesResult.data ?? []);
+  let users = [];
+
+  if (topVoterIds.length) {
+    const usersResult = await supabase
+      .from("profiles")
+      .select("id, email, created_datetime_utc")
+      .in("id", topVoterIds);
+
+    if (usersResult.error) {
+      return <StatusState message={usersResult.error.message} />;
+    }
+
+    users = usersResult.data ?? [];
   }
 
   const {
@@ -402,7 +391,7 @@ export default function StatisticsPage() {
     mostActiveVoters,
     votesByDay,
     maxVotesPerDay
-  } = buildStatistics(state.votes, state.captions, state.users);
+  } = buildStatistics(votesResult.data ?? [], captionsResult.data ?? [], users);
 
   return (
     <div style={containerStyle}>
@@ -434,7 +423,7 @@ export default function StatisticsPage() {
           <StatCard
             label="Not Funny Votes"
             value={totalNotFunny}
-            icon="💀"
+            icon="😐"
             color="var(--stats-negative)"
             sub={`${Math.max(0, 100 - overallFunnyPercent)}% of all votes`}
           />
@@ -455,9 +444,11 @@ export default function StatisticsPage() {
             Overall Funny vs Not Funny
           </p>
           <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "6px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--stats-positive)" }}>😂 {totalFunny} funny</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--stats-positive)" }}>
+              😂 {totalFunny} funny ({overallFunnyPercent}%)
+            </span>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--stats-negative)" }}>
-              {totalNotFunny} not funny 💀
+              {totalNotFunny} not funny 😐 ({Math.max(0, 100 - overallFunnyPercent)}%)
             </span>
           </div>
           <div
