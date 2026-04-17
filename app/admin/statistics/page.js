@@ -1,7 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE_SIZE = 1000;
-export const dynamic = "force-dynamic";
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+let statisticsCache = {
+  expiresAt: 0,
+  data: null,
+  error: ""
+};
 
 const containerStyle = {
   display: "flex",
@@ -343,7 +349,12 @@ function StatusState({ message }) {
   );
 }
 
-export default async function StatisticsPage() {
+async function loadStatisticsSnapshot() {
+  const now = Date.now();
+  if (statisticsCache.data && statisticsCache.expiresAt > now) {
+    return statisticsCache;
+  }
+
   const supabase = await createClient();
   const [votesResult, captionsResult] = await Promise.all([
     fetchAllRows(
@@ -360,7 +371,12 @@ export default async function StatisticsPage() {
 
   const baseError = votesResult.error?.message || captionsResult.error?.message || "";
   if (baseError) {
-    return <StatusState message={baseError} />;
+    statisticsCache = {
+      expiresAt: now + 30 * 1000,
+      data: null,
+      error: baseError
+    };
+    return statisticsCache;
   }
 
   const topVoterIds = getTopVoterIds(votesResult.data ?? []);
@@ -373,10 +389,31 @@ export default async function StatisticsPage() {
       .in("id", topVoterIds);
 
     if (usersResult.error) {
-      return <StatusState message={usersResult.error.message} />;
+      statisticsCache = {
+        expiresAt: now + 30 * 1000,
+        data: null,
+        error: usersResult.error.message
+      };
+      return statisticsCache;
     }
 
     users = usersResult.data ?? [];
+  }
+
+  statisticsCache = {
+    expiresAt: now + CACHE_TTL_MS,
+    data: buildStatistics(votesResult.data ?? [], captionsResult.data ?? [], users),
+    error: ""
+  };
+
+  return statisticsCache;
+}
+
+export default async function StatisticsPage() {
+  const snapshot = await loadStatisticsSnapshot();
+
+  if (snapshot.error) {
+    return <StatusState message={snapshot.error} />;
   }
 
   const {
@@ -391,7 +428,7 @@ export default async function StatisticsPage() {
     mostActiveVoters,
     votesByDay,
     maxVotesPerDay
-  } = buildStatistics(votesResult.data ?? [], captionsResult.data ?? [], users);
+  } = snapshot.data;
 
   return (
     <div style={containerStyle}>
