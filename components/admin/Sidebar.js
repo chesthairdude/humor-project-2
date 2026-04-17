@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 
 export const NAV_GROUPS = [
   {
-    label: "Overview",
+    label: "Analytics",
     items: [
-      { label: "Stats", href: "/admin/stats", icon: "📊", access: "read" }
+      { label: "Statistics", href: "/admin/statistics", icon: "📊", access: "read" }
     ]
   },
   {
