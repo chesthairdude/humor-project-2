@@ -348,17 +348,17 @@ export default function StatisticsPage() {
         fetchAllRows(
           supabase,
           "caption_votes",
-          "id, caption_id, vote_value, created_at, created_datetime_utc, user_id"
+          "id, caption_id, vote_value, created_datetime_utc, user_id"
         ),
         fetchAllRows(
           supabase,
           "captions",
-          "id, content, caption_content, image_id, created_at, created_datetime_utc, humor_flavor_id"
+          "id, content, caption_content, image_id, created_datetime_utc, humor_flavor_id"
         ),
         fetchAllRows(
           supabase,
           "profiles",
-          "id, email, created_at, created_datetime_utc"
+          "id, email, created_datetime_utc"
         )
       ]);
 
